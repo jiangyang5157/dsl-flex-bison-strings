@@ -70,6 +70,7 @@
  */
 #include <cstdio>
 #include <iostream>
+#include <list>
 #include <stdio.h>
 #include <string.h>
 #include "Strings.h"
@@ -87,7 +88,7 @@ extern "C" {
 extern int lineNum;
 
 char* strMerge(char* str1, char* str2);
-void reverse(char* str);
+void reverseString(char* str);
 
 // Sentence's container
 SentenceList sList;
@@ -95,7 +96,8 @@ SentenceList sList;
 Sentence* newSentence(char* name);
 Sentence* setSentence(char* name, char* content);
 Sentence* appendSentence(char* name, char* content);
-Sentence* reverseSentence(char* name);
+Sentence* reverse(char* name);
+Sentence* reverseWords(char* name);
 Sentence* getSentence(char* name);
 char* getContent(char* name);
 
@@ -112,7 +114,7 @@ void exit();
 
 
 /* Line 371 of yacc.c  */
-#line 116 "Strings.tab.c"
+#line 118 "Strings.tab.c"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -165,12 +167,13 @@ extern int yydebug;
      SET = 272,
      APPEND = 273,
      REVERSE = 274,
-     PRINT = 275,
-     PRINT_LENGTH = 276,
-     PRINT_WORD_COUNT = 277,
-     PRINT_WORDS = 278,
-     LIST = 279,
-     EXIT = 280
+     REVERSE_WORDS = 275,
+     PRINT = 276,
+     PRINT_LENGTH = 277,
+     PRINT_WORD_COUNT = 278,
+     PRINT_WORDS = 279,
+     LIST = 280,
+     EXIT = 281
    };
 #endif
 
@@ -179,13 +182,13 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 387 of yacc.c  */
-#line 51 "Strings.y"
+#line 53 "Strings.y"
 
   char* strVal;
 
 
 /* Line 387 of yacc.c  */
-#line 189 "Strings.tab.c"
+#line 192 "Strings.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -213,7 +216,7 @@ int yyparse ();
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 217 "Strings.tab.c"
+#line 220 "Strings.tab.c"
 
 #ifdef short
 # undef short
@@ -440,22 +443,22 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  25
+#define YYFINAL  27
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   65
+#define YYLAST   70
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  26
+#define YYNTOKENS  27
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  16
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  42
+#define YYNRULES  43
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  66
+#define YYNSTATES  69
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   280
+#define YYMAXUTOK   281
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -491,7 +494,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      25
+      25,    26
 };
 
 #if YYDEBUG
@@ -500,37 +503,37 @@ static const yytype_uint8 yytranslate[] =
 static const yytype_uint8 yyprhs[] =
 {
        0,     0,     3,     5,     8,    10,    13,    15,    17,    19,
-      25,    31,    35,    39,    43,    47,    51,    53,    56,    58,
-      61,    63,    66,    70,    72,    75,    77,    79,    81,    83,
-      85,    87,    89,    91,    93,    95,    98,   100,   103,   105,
-     107,   109,   111
+      25,    31,    35,    39,    43,    47,    51,    55,    57,    60,
+      62,    65,    67,    70,    74,    76,    79,    81,    83,    85,
+      87,    89,    91,    93,    95,    97,    99,   102,   104,   107,
+     109,   111,   113,   115
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      27,     0,    -1,    28,    -1,    28,    29,    -1,    29,    -1,
-      30,    11,    -1,    41,    -1,    14,    -1,    25,    -1,    17,
-       6,    38,     6,    31,    -1,    18,     6,    38,     6,    31,
-      -1,    19,     6,    38,    -1,    20,     6,    38,    -1,    21,
-       6,    38,    -1,    22,     6,    38,    -1,    23,     6,    38,
-      -1,    24,    -1,    34,    32,    -1,    34,    -1,    32,    33,
-      -1,    33,    -1,    16,    34,    -1,    15,    35,    15,    -1,
-      38,    -1,    35,    36,    -1,    36,    -1,    40,    -1,    37,
-      -1,    41,    -1,     8,    -1,     9,    -1,    10,    -1,    11,
-      -1,    12,    -1,    13,    -1,     4,    39,    -1,     4,    -1,
-      39,    40,    -1,    40,    -1,     4,    -1,     3,    -1,     6,
-      -1,     7,    -1
+      28,     0,    -1,    29,    -1,    29,    30,    -1,    30,    -1,
+      31,    11,    -1,    42,    -1,    14,    -1,    26,    -1,    17,
+       6,    39,     6,    32,    -1,    18,     6,    39,     6,    32,
+      -1,    19,     6,    39,    -1,    20,     6,    39,    -1,    21,
+       6,    39,    -1,    22,     6,    39,    -1,    23,     6,    39,
+      -1,    24,     6,    39,    -1,    25,    -1,    35,    33,    -1,
+      35,    -1,    33,    34,    -1,    34,    -1,    16,    35,    -1,
+      15,    36,    15,    -1,    39,    -1,    36,    37,    -1,    37,
+      -1,    41,    -1,    38,    -1,    42,    -1,     8,    -1,     9,
+      -1,    10,    -1,    11,    -1,    12,    -1,    13,    -1,     4,
+      40,    -1,     4,    -1,    40,    41,    -1,    41,    -1,     4,
+      -1,     3,    -1,     6,    -1,     7,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    99,    99,   103,   104,   108,   109,   110,   114,   115,
-     116,   117,   118,   119,   120,   121,   122,   126,   127,   131,
-     132,   136,   140,   141,   145,   146,   150,   151,   152,   156,
-     157,   158,   159,   160,   161,   165,   166,   170,   171,   175,
-     176,   180,   181
+       0,   102,   102,   106,   107,   111,   112,   113,   117,   118,
+     119,   120,   121,   122,   123,   124,   125,   126,   130,   131,
+     135,   136,   140,   144,   145,   149,   150,   154,   155,   156,
+     160,   161,   162,   163,   164,   165,   169,   170,   174,   175,
+     179,   180,   184,   185
 };
 #endif
 
@@ -542,11 +545,11 @@ static const char *const yytname[] =
   "$end", "error", "$undefined", "DIGIT", "LETTER", "PUNCTUATION",
   "SPACE", "TAB", "MARK_COMMA", "MARK_FULL_STOP", "MARK_COLON",
   "MARK_SEMICOLON", "MARK_QUESTION", "MARK_EXCLAMATORY", "NEW_LINE",
-  "DOUBLE_QUOTATION", "ADD", "SET", "APPEND", "REVERSE", "PRINT",
-  "PRINT_LENGTH", "PRINT_WORD_COUNT", "PRINT_WORDS", "LIST", "EXIT",
-  "$accept", "program", "statements", "statement", "declare", "expression",
-  "appendValues", "appendValue", "value", "literals", "literal",
-  "punctuation", "identifier", "alphanums", "alphanum", "blank", YY_NULL
+  "DOUBLE_QUOTATION", "ADD", "SET", "APPEND", "REVERSE", "REVERSE_WORDS",
+  "PRINT", "PRINT_LENGTH", "PRINT_WORD_COUNT", "PRINT_WORDS", "LIST",
+  "EXIT", "$accept", "program", "statements", "statement", "declare",
+  "expression", "appendValues", "appendValue", "value", "literals",
+  "literal", "punctuation", "identifier", "alphanums", "alphanum", "blank", YY_NULL
 };
 #endif
 
@@ -557,28 +560,28 @@ static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
-     275,   276,   277,   278,   279,   280
+     275,   276,   277,   278,   279,   280,   281
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    26,    27,    28,    28,    29,    29,    29,    30,    30,
-      30,    30,    30,    30,    30,    30,    30,    31,    31,    32,
-      32,    33,    34,    34,    35,    35,    36,    36,    36,    37,
-      37,    37,    37,    37,    37,    38,    38,    39,    39,    40,
-      40,    41,    41
+       0,    27,    28,    29,    29,    30,    30,    30,    31,    31,
+      31,    31,    31,    31,    31,    31,    31,    31,    32,    32,
+      33,    33,    34,    35,    35,    36,    36,    37,    37,    37,
+      38,    38,    38,    38,    38,    38,    39,    39,    40,    40,
+      41,    41,    42,    42
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
        0,     2,     1,     2,     1,     2,     1,     1,     1,     5,
-       5,     3,     3,     3,     3,     3,     1,     2,     1,     2,
-       1,     2,     3,     1,     2,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     2,     1,     2,     1,     1,
-       1,     1,     1
+       5,     3,     3,     3,     3,     3,     3,     1,     2,     1,
+       2,     1,     2,     3,     1,     2,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     1,     2,     1,     2,     1,
+       1,     1,     1,     1
 };
 
 /* YYDEFACT[STATE-NAME] -- Default reduction number in state STATE-NUM.
@@ -586,41 +589,41 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       0,    41,    42,     7,     0,     0,     0,     0,     0,     0,
-       0,    16,     8,     0,     2,     4,     0,     6,     0,     0,
-       0,     0,     0,     0,     0,     1,     3,     5,    36,     0,
-       0,    11,    12,    13,    14,    15,    40,    39,    35,    38,
-       0,     0,    37,     0,     9,    18,    23,    10,    29,    30,
-      31,    32,    33,    34,     0,    25,    27,    26,    28,     0,
-      17,    20,    22,    24,    21,    19
+       0,    42,    43,     7,     0,     0,     0,     0,     0,     0,
+       0,     0,    17,     8,     0,     2,     4,     0,     6,     0,
+       0,     0,     0,     0,     0,     0,     0,     1,     3,     5,
+      37,     0,     0,    11,    12,    13,    14,    15,    16,    41,
+      40,    36,    39,     0,     0,    38,     0,     9,    19,    24,
+      10,    30,    31,    32,    33,    34,    35,     0,    26,    28,
+      27,    29,     0,    18,    21,    23,    25,    22,    20
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,    13,    14,    15,    16,    44,    60,    61,    45,    54,
-      55,    56,    46,    38,    57,    17
+      -1,    14,    15,    16,    17,    47,    63,    64,    48,    57,
+      58,    59,    49,    41,    60,    18
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -22
+#define YYPACT_NINF -12
 static const yytype_int8 yypact[] =
 {
-      -6,   -22,   -22,   -22,    -2,     0,     1,     3,     4,    28,
-      29,   -22,   -22,     5,    -6,   -22,    25,   -22,    33,    33,
-      33,    33,    33,    33,    33,   -22,   -22,   -22,    -1,    32,
-      53,   -22,   -22,   -22,   -22,   -22,   -22,   -22,    -1,   -22,
-      18,    18,   -22,    37,   -22,    44,   -22,   -22,   -22,   -22,
-     -22,   -22,   -22,   -22,    17,   -22,   -22,   -22,   -22,    18,
-      44,   -22,   -22,   -22,   -22,   -22
+      -6,   -12,   -12,   -12,    -2,     0,     1,     3,     4,    30,
+      31,    32,   -12,   -12,     5,    -6,   -12,    28,   -12,    37,
+      37,    37,    37,    37,    37,    37,    37,   -12,   -12,   -12,
+      -1,    34,    57,   -12,   -12,   -12,   -12,   -12,   -12,   -12,
+     -12,    -1,   -12,    19,    19,   -12,    41,   -12,    26,   -12,
+     -12,   -12,   -12,   -12,   -12,   -12,   -12,    18,   -12,   -12,
+     -12,   -12,    19,    26,   -12,   -12,   -12,   -12,   -12
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -22,   -22,   -22,    48,   -22,    22,   -22,   -21,     6,   -22,
-      10,   -22,    34,   -22,    23,   -12
+     -12,   -12,   -12,    49,   -12,    21,   -12,     6,     8,   -12,
+       9,   -12,    36,   -12,     2,   -11
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -629,30 +632,32 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-       1,     2,    36,    37,    18,    25,    19,    20,     3,    21,
-      22,     4,     5,     6,     7,     8,     9,    10,    11,    12,
-      36,    37,    28,     1,     2,    48,    49,    50,    51,    52,
-      53,    58,    62,    43,    23,    24,    27,    28,    40,    65,
-      36,    37,    58,     1,     2,    48,    49,    50,    51,    52,
-      53,    39,    29,    30,    31,    32,    33,    34,    35,    41,
-      59,    42,    26,    47,    63,    64
+       1,     2,    39,    40,    19,    27,    20,    21,     3,    22,
+      23,     4,     5,     6,     7,     8,     9,    10,    11,    12,
+      13,    39,    40,    30,     1,     2,    51,    52,    53,    54,
+      55,    56,    42,    65,    46,    61,    24,    25,    26,    29,
+      43,    30,    62,    45,    39,    40,    61,     1,     2,    51,
+      52,    53,    54,    55,    56,    31,    32,    33,    34,    35,
+      36,    37,    38,    44,    28,    50,    66,     0,     0,    68,
+      67
 };
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-22)))
+  (!!((Yystate) == (-12)))
 
 #define yytable_value_is_error(Yytable_value) \
   YYID (0)
 
-static const yytype_uint8 yycheck[] =
+static const yytype_int8 yycheck[] =
 {
        6,     7,     3,     4,     6,     0,     6,     6,    14,     6,
        6,    17,    18,    19,    20,    21,    22,    23,    24,    25,
-       3,     4,     4,     6,     7,     8,     9,    10,    11,    12,
-      13,    43,    15,    15,     6,     6,    11,     4,     6,    60,
-       3,     4,    54,     6,     7,     8,     9,    10,    11,    12,
-      13,    28,    18,    19,    20,    21,    22,    23,    24,     6,
-      16,    38,    14,    41,    54,    59
+      26,     3,     4,     4,     6,     7,     8,     9,    10,    11,
+      12,    13,    30,    15,    15,    46,     6,     6,     6,    11,
+       6,     4,    16,    41,     3,     4,    57,     6,     7,     8,
+       9,    10,    11,    12,    13,    19,    20,    21,    22,    23,
+      24,    25,    26,     6,    15,    44,    57,    -1,    -1,    63,
+      62
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -660,12 +665,12 @@ static const yytype_uint8 yycheck[] =
 static const yytype_uint8 yystos[] =
 {
        0,     6,     7,    14,    17,    18,    19,    20,    21,    22,
-      23,    24,    25,    27,    28,    29,    30,    41,     6,     6,
-       6,     6,     6,     6,     6,     0,    29,    11,     4,    38,
-      38,    38,    38,    38,    38,    38,     3,     4,    39,    40,
-       6,     6,    40,    15,    31,    34,    38,    31,     8,     9,
-      10,    11,    12,    13,    35,    36,    37,    40,    41,    16,
-      32,    33,    15,    36,    34,    33
+      23,    24,    25,    26,    28,    29,    30,    31,    42,     6,
+       6,     6,     6,     6,     6,     6,     6,     0,    30,    11,
+       4,    39,    39,    39,    39,    39,    39,    39,    39,     3,
+       4,    40,    41,     6,     6,    41,    15,    32,    35,    39,
+      32,     8,     9,    10,    11,    12,    13,    36,    37,    38,
+      41,    42,    16,    33,    34,    15,    37,    35,    34
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1458,110 +1463,110 @@ yyreduce:
     {
         case 8:
 /* Line 1787 of yacc.c  */
-#line 114 "Strings.y"
+#line 117 "Strings.y"
     {exit();}
     break;
 
   case 9:
 /* Line 1787 of yacc.c  */
-#line 115 "Strings.y"
+#line 118 "Strings.y"
     {setSentence((yyvsp[(3) - (5)].strVal), (yyvsp[(5) - (5)].strVal));}
     break;
 
   case 10:
 /* Line 1787 of yacc.c  */
-#line 116 "Strings.y"
+#line 119 "Strings.y"
     {appendSentence((yyvsp[(3) - (5)].strVal), (yyvsp[(5) - (5)].strVal));}
     break;
 
   case 11:
 /* Line 1787 of yacc.c  */
-#line 117 "Strings.y"
-    {reverseSentence((yyvsp[(3) - (3)].strVal));}
+#line 120 "Strings.y"
+    {reverse((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 12:
 /* Line 1787 of yacc.c  */
-#line 118 "Strings.y"
-    {println((yyvsp[(3) - (3)].strVal));}
+#line 121 "Strings.y"
+    {reverseWords((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 13:
 /* Line 1787 of yacc.c  */
-#line 119 "Strings.y"
-    {printlnLength((yyvsp[(3) - (3)].strVal));}
+#line 122 "Strings.y"
+    {println((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 14:
 /* Line 1787 of yacc.c  */
-#line 120 "Strings.y"
-    {printlnWordCount((yyvsp[(3) - (3)].strVal));}
+#line 123 "Strings.y"
+    {printlnLength((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 15:
 /* Line 1787 of yacc.c  */
-#line 121 "Strings.y"
-    {printlnWords((yyvsp[(3) - (3)].strVal));}
+#line 124 "Strings.y"
+    {printlnWordCount((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 16:
 /* Line 1787 of yacc.c  */
-#line 122 "Strings.y"
-    {listln();}
+#line 125 "Strings.y"
+    {printlnWords((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 17:
 /* Line 1787 of yacc.c  */
 #line 126 "Strings.y"
-    {strcpy((yyval.strVal), strMerge((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal)));}
+    {listln();}
     break;
 
   case 18:
 /* Line 1787 of yacc.c  */
-#line 127 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 130 "Strings.y"
+    {strcpy((yyval.strVal), strMerge((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal)));}
     break;
 
   case 19:
 /* Line 1787 of yacc.c  */
 #line 131 "Strings.y"
-    {strcpy((yyval.strVal), strMerge((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal)));}
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 20:
 /* Line 1787 of yacc.c  */
-#line 132 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 135 "Strings.y"
+    {strcpy((yyval.strVal), strMerge((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal)));}
     break;
 
   case 21:
 /* Line 1787 of yacc.c  */
 #line 136 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(2) - (2)].strVal);}
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 22:
 /* Line 1787 of yacc.c  */
 #line 140 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(2) - (3)].strVal);}
+    {(yyval.strVal) = (yyvsp[(2) - (2)].strVal);}
     break;
 
   case 23:
 /* Line 1787 of yacc.c  */
-#line 141 "Strings.y"
-    {(yyval.strVal) = getContent((yyvsp[(1) - (1)].strVal));}
+#line 144 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(2) - (3)].strVal);}
     break;
 
   case 24:
 /* Line 1787 of yacc.c  */
 #line 145 "Strings.y"
-    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
+    {(yyval.strVal) = getContent((yyvsp[(1) - (1)].strVal));}
     break;
 
   case 25:
 /* Line 1787 of yacc.c  */
-#line 146 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 149 "Strings.y"
+    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
     break;
 
   case 26:
@@ -1572,13 +1577,13 @@ yyreduce:
 
   case 27:
 /* Line 1787 of yacc.c  */
-#line 151 "Strings.y"
+#line 154 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 28:
 /* Line 1787 of yacc.c  */
-#line 152 "Strings.y"
+#line 155 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
@@ -1590,56 +1595,56 @@ yyreduce:
 
   case 30:
 /* Line 1787 of yacc.c  */
-#line 157 "Strings.y"
+#line 160 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 31:
 /* Line 1787 of yacc.c  */
-#line 158 "Strings.y"
+#line 161 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 32:
 /* Line 1787 of yacc.c  */
-#line 159 "Strings.y"
+#line 162 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 33:
 /* Line 1787 of yacc.c  */
-#line 160 "Strings.y"
+#line 163 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 34:
 /* Line 1787 of yacc.c  */
-#line 161 "Strings.y"
+#line 164 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 35:
 /* Line 1787 of yacc.c  */
 #line 165 "Strings.y"
-    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 36:
 /* Line 1787 of yacc.c  */
-#line 166 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 169 "Strings.y"
+    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
     break;
 
   case 37:
 /* Line 1787 of yacc.c  */
 #line 170 "Strings.y"
-    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 38:
 /* Line 1787 of yacc.c  */
-#line 171 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 174 "Strings.y"
+    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
     break;
 
   case 39:
@@ -1650,7 +1655,7 @@ yyreduce:
 
   case 40:
 /* Line 1787 of yacc.c  */
-#line 176 "Strings.y"
+#line 179 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
@@ -1662,13 +1667,19 @@ yyreduce:
 
   case 42:
 /* Line 1787 of yacc.c  */
-#line 181 "Strings.y"
+#line 184 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+    break;
+
+  case 43:
+/* Line 1787 of yacc.c  */
+#line 185 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
 
 /* Line 1787 of yacc.c  */
-#line 1672 "Strings.tab.c"
+#line 1683 "Strings.tab.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1900,7 +1911,7 @@ yyreturn:
 
 
 /* Line 2050 of yacc.c  */
-#line 184 "Strings.y"
+#line 188 "Strings.y"
 
 /*
  * Additional C++ code
@@ -1932,7 +1943,7 @@ main() {
 	// Parse through the input until there is no more
 	do {
 		yyparse();
-	} while (!feof(yyin));
+	}while (!feof(yyin));
 
 	return 0;
 }
@@ -1940,7 +1951,7 @@ main() {
 /*
  * Return a new string by merging two string.
  */
-char* strMerge(char* str1, char* str2){
+char* strMerge(char* str1, char* str2) {
 	char* ret = strdup(str1);
 	strcat(ret, str2);
 	return ret;
@@ -1979,9 +1990,9 @@ Sentence* appendSentence(char* name, char* content) {
 	Sentence* ret = getSentence(name);
 
 	if (ret != NULL) {
-	  if (ret->content == NULL){
+		if (ret->content == NULL) {
 			ret->content = strdup(content);
-		}else{
+		} else {
 			strcat(ret->content, content);
 		}
 	} else {
@@ -1994,11 +2005,48 @@ Sentence* appendSentence(char* name, char* content) {
 /*
  * Get the sentence by a given name, and reverse its content.
  */
-Sentence* reverseSentence(char* name) {
+Sentence* reverse(char* name) {
 	Sentence* ret = getSentence(name);
 
 	if (ret != NULL) {
-		reverse(ret->content);
+		reverseString(ret->content);
+	} else {
+		cout << "# Cannot find " << name << endl;
+	}
+
+	return ret;
+}
+
+/*
+ * Reverse words.
+ */
+Sentence* reverseWords(char* name) {
+	Sentence* ret = getSentence(name);
+
+	if (ret != NULL) {
+		char* cTemp = strdup(ret->content);
+		// chars for splitting two word
+		char* split = strdup(" ,.:;?!");
+
+		list<char*> wordList;
+		char* word = strtok(cTemp, split);
+		while (word != NULL) {
+			wordList.push_front(word);
+			word = strtok(NULL, split);
+		}
+
+		if (wordList.size() > 0) {
+			list<char*>::iterator it = wordList.begin();
+			char* firstWord = *it;
+			char* newContent = strdup(firstWord);
+			for (++it; it != wordList.end(); ++it) {
+				char* w = *it;
+				strcat(newContent, " ");
+				strcat(newContent, w);
+			}
+
+			ret->content = newContent;
+		}
 	} else {
 		cout << "# Cannot find " << name << endl;
 	}
@@ -2009,10 +2057,10 @@ Sentence* reverseSentence(char* name) {
 /*
  * Reverse a str.
  */
-void reverse(char* str){
+void reverseString(char* str) {
 	char* strTemp = strdup(str);
 
-	for (strTemp = strchr(str, 0) - 1; str < strTemp; ++str, --strTemp){
+	for (strTemp = strchr(str, 0) - 1; str < strTemp; ++str, --strTemp) {
 		std::swap(*str, *strTemp);
 	}
 }
@@ -2052,7 +2100,7 @@ char* getContent(char* name) {
 		}
 	}
 
-	if (ret == NULL){
+	if (ret == NULL) {
 		// Cannot file the sentence
 		cout << "Cannot find " << name << endl;
 		ret = strdup("");
@@ -2064,11 +2112,11 @@ char* getContent(char* name) {
 /*
  * Print a sentence by a given name.
  */
-void println(char* name){
+void println(char* name) {
 	Sentence* s = getSentence(name);
-	if (s != NULL){
+	if (s != NULL) {
 		cout << s->name << ": " << "\"" << s->content << "\"" << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -2076,10 +2124,10 @@ void println(char* name){
 /*
  * Print the sentence.
  */
-void println(Sentence* s){
-	if (s != NULL){
+void println(Sentence* s) {
+	if (s != NULL) {
 		cout << s->name << ": " << "\"" << s->content << "\"" << endl;
-	}else{
+	} else {
 		cout << "# Cannot find it" << endl;
 	}
 }
@@ -2087,15 +2135,15 @@ void println(Sentence* s){
 /*
  * Print a sentence's length by a given name.
  */
-void printlnLength(char* name){
+void printlnLength(char* name) {
 	Sentence* s = getSentence(name);
-	if (s != NULL){
+	if (s != NULL) {
 		int length = 0;
-		if (s->content != NULL){
+		if (s->content != NULL) {
 			length = strlen(s->content);
 		}
 		cout << "Length of " << s->name << " is: " << length << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -2103,10 +2151,10 @@ void printlnLength(char* name){
 /*
  * Print a sentence's word count by a given name.
  */
-void printlnWordCount(char* name){
+void printlnWordCount(char* name) {
 	Sentence* s = getSentence(name);
 
-	if (s != NULL){
+	if (s != NULL) {
 		char* cTemp = strdup(s->content);
 		// chars for splitting two word
 		char* split = strdup(" ,.:;?!");
@@ -2114,11 +2162,12 @@ void printlnWordCount(char* name){
 		int count = 0;
 		char* word = strtok(cTemp, split);
 		while (word != NULL) {
-			word = strtok(NULL, split);
 			count++;
+			word = strtok(NULL, split);
 		}
+
 		cout << "Wordcount of " << name << "is: " << count << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -2126,11 +2175,11 @@ void printlnWordCount(char* name){
 /*
  * Print a sentence's words by a given name.
  */
-void printlnWords(char* name){
+void printlnWords(char* name) {
 	Sentence* s = getSentence(name);
 
 	cout << "Words of " << name << " are: " << endl;
-	if (s != NULL){
+	if (s != NULL) {
 		char* cTemp = strdup(s->content);
 		// chars for splitting two word
 		char* split = strdup(" ,.:;?!");
@@ -2140,7 +2189,7 @@ void printlnWords(char* name){
 			cout << word << endl;
 			word = strtok(NULL, split);
 		}
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -2148,11 +2197,11 @@ void printlnWords(char* name){
 /*
  * Print the sentence's container.
  */
-void listln(){
+void listln() {
 	int size = sList.size();
 	cout << "Identifier list (" << size << "):" << endl;
 
-	if (size > 0){
+	if (size > 0) {
 		SentenceList::iterator it;
 		for (it = sList.begin(); it != sList.end(); ++it) {
 			Sentence* s = *it;
@@ -2168,8 +2217,10 @@ void sentenceListRelease() {
 	SentenceList::iterator it = sList.begin();
 	for (it = sList.begin(); it != sList.end(); ++it) {
 		Sentence* s = *it;
-		delete (s);
-		s = NULL;
+		if (s != NULL) {
+			delete (s);
+			s = NULL;
+		}
 	}
 
 	sList.clear();
@@ -2178,8 +2229,8 @@ void sentenceListRelease() {
 /*
  * Exit function.
  */
-void exit(){
+void exit() {
 	sentenceListRelease();
-	cout << "# Program exit." << endl;
+	cout << "# Program exit" << endl;
 	exit(0);
 }

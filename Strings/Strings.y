@@ -4,6 +4,7 @@
  */
 #include <cstdio>
 #include <iostream>
+#include <list>
 #include <stdio.h>
 #include <string.h>
 #include "Strings.h"
@@ -21,7 +22,7 @@ extern "C" {
 extern int lineNum;
 
 char* strMerge(char* str1, char* str2);
-void reverse(char* str);
+void reverseString(char* str);
 
 // Sentence's container
 SentenceList sList;
@@ -29,7 +30,8 @@ SentenceList sList;
 Sentence* newSentence(char* name);
 Sentence* setSentence(char* name, char* content);
 Sentence* appendSentence(char* name, char* content);
-Sentence* reverseSentence(char* name);
+Sentence* reverse(char* name);
+Sentence* reverseWords(char* name);
 Sentence* getSentence(char* name);
 char* getContent(char* name);
 
@@ -71,6 +73,7 @@ void exit();
 %token SET 
 %token APPEND 
 %token REVERSE 
+%token REVERSE_WORDS
 %token PRINT 
 %token PRINT_LENGTH 
 %token PRINT_WORD_COUNT 
@@ -114,7 +117,8 @@ declare:
   EXIT {exit();}
   | SET SPACE identifier SPACE expression {setSentence($3, $5);}
   | APPEND SPACE identifier SPACE expression {appendSentence($3, $5);}
-  | REVERSE SPACE identifier {reverseSentence($3);}
+  | REVERSE SPACE identifier {reverse($3);}
+  | REVERSE_WORDS SPACE identifier {reverseWords($3);}
   | PRINT SPACE identifier {println($3);}
   | PRINT_LENGTH SPACE identifier {printlnLength($3);}
   | PRINT_WORD_COUNT SPACE identifier {printlnWordCount($3);}
@@ -212,7 +216,7 @@ main() {
 	// Parse through the input until there is no more
 	do {
 		yyparse();
-	} while (!feof(yyin));
+	}while (!feof(yyin));
 
 	return 0;
 }
@@ -220,7 +224,7 @@ main() {
 /*
  * Return a new string by merging two string.
  */
-char* strMerge(char* str1, char* str2){
+char* strMerge(char* str1, char* str2) {
 	char* ret = strdup(str1);
 	strcat(ret, str2);
 	return ret;
@@ -259,9 +263,9 @@ Sentence* appendSentence(char* name, char* content) {
 	Sentence* ret = getSentence(name);
 
 	if (ret != NULL) {
-	  if (ret->content == NULL){
+		if (ret->content == NULL) {
 			ret->content = strdup(content);
-		}else{
+		} else {
 			strcat(ret->content, content);
 		}
 	} else {
@@ -274,11 +278,48 @@ Sentence* appendSentence(char* name, char* content) {
 /*
  * Get the sentence by a given name, and reverse its content.
  */
-Sentence* reverseSentence(char* name) {
+Sentence* reverse(char* name) {
 	Sentence* ret = getSentence(name);
 
 	if (ret != NULL) {
-		reverse(ret->content);
+		reverseString(ret->content);
+	} else {
+		cout << "# Cannot find " << name << endl;
+	}
+
+	return ret;
+}
+
+/*
+ * Reverse words.
+ */
+Sentence* reverseWords(char* name) {
+	Sentence* ret = getSentence(name);
+
+	if (ret != NULL) {
+		char* cTemp = strdup(ret->content);
+		// chars for splitting two word
+		char* split = strdup(" ,.:;?!");
+
+		list<char*> wordList;
+		char* word = strtok(cTemp, split);
+		while (word != NULL) {
+			wordList.push_front(word);
+			word = strtok(NULL, split);
+		}
+
+		if (wordList.size() > 0) {
+			list<char*>::iterator it = wordList.begin();
+			char* firstWord = *it;
+			char* newContent = strdup(firstWord);
+			for (++it; it != wordList.end(); ++it) {
+				char* w = *it;
+				strcat(newContent, " ");
+				strcat(newContent, w);
+			}
+
+			ret->content = newContent;
+		}
 	} else {
 		cout << "# Cannot find " << name << endl;
 	}
@@ -289,10 +330,10 @@ Sentence* reverseSentence(char* name) {
 /*
  * Reverse a str.
  */
-void reverse(char* str){
+void reverseString(char* str) {
 	char* strTemp = strdup(str);
 
-	for (strTemp = strchr(str, 0) - 1; str < strTemp; ++str, --strTemp){
+	for (strTemp = strchr(str, 0) - 1; str < strTemp; ++str, --strTemp) {
 		std::swap(*str, *strTemp);
 	}
 }
@@ -332,7 +373,7 @@ char* getContent(char* name) {
 		}
 	}
 
-	if (ret == NULL){
+	if (ret == NULL) {
 		// Cannot file the sentence
 		cout << "Cannot find " << name << endl;
 		ret = strdup("");
@@ -344,11 +385,11 @@ char* getContent(char* name) {
 /*
  * Print a sentence by a given name.
  */
-void println(char* name){
+void println(char* name) {
 	Sentence* s = getSentence(name);
-	if (s != NULL){
+	if (s != NULL) {
 		cout << s->name << ": " << "\"" << s->content << "\"" << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -356,10 +397,10 @@ void println(char* name){
 /*
  * Print the sentence.
  */
-void println(Sentence* s){
-	if (s != NULL){
+void println(Sentence* s) {
+	if (s != NULL) {
 		cout << s->name << ": " << "\"" << s->content << "\"" << endl;
-	}else{
+	} else {
 		cout << "# Cannot find it" << endl;
 	}
 }
@@ -367,15 +408,15 @@ void println(Sentence* s){
 /*
  * Print a sentence's length by a given name.
  */
-void printlnLength(char* name){
+void printlnLength(char* name) {
 	Sentence* s = getSentence(name);
-	if (s != NULL){
+	if (s != NULL) {
 		int length = 0;
-		if (s->content != NULL){
+		if (s->content != NULL) {
 			length = strlen(s->content);
 		}
 		cout << "Length of " << s->name << " is: " << length << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -383,10 +424,10 @@ void printlnLength(char* name){
 /*
  * Print a sentence's word count by a given name.
  */
-void printlnWordCount(char* name){
+void printlnWordCount(char* name) {
 	Sentence* s = getSentence(name);
 
-	if (s != NULL){
+	if (s != NULL) {
 		char* cTemp = strdup(s->content);
 		// chars for splitting two word
 		char* split = strdup(" ,.:;?!");
@@ -394,11 +435,12 @@ void printlnWordCount(char* name){
 		int count = 0;
 		char* word = strtok(cTemp, split);
 		while (word != NULL) {
-			word = strtok(NULL, split);
 			count++;
+			word = strtok(NULL, split);
 		}
+
 		cout << "Wordcount of " << name << "is: " << count << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -406,11 +448,11 @@ void printlnWordCount(char* name){
 /*
  * Print a sentence's words by a given name.
  */
-void printlnWords(char* name){
+void printlnWords(char* name) {
 	Sentence* s = getSentence(name);
 
 	cout << "Words of " << name << " are: " << endl;
-	if (s != NULL){
+	if (s != NULL) {
 		char* cTemp = strdup(s->content);
 		// chars for splitting two word
 		char* split = strdup(" ,.:;?!");
@@ -420,7 +462,7 @@ void printlnWords(char* name){
 			cout << word << endl;
 			word = strtok(NULL, split);
 		}
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -428,11 +470,11 @@ void printlnWords(char* name){
 /*
  * Print the sentence's container.
  */
-void listln(){
+void listln() {
 	int size = sList.size();
 	cout << "Identifier list (" << size << "):" << endl;
 
-	if (size > 0){
+	if (size > 0) {
 		SentenceList::iterator it;
 		for (it = sList.begin(); it != sList.end(); ++it) {
 			Sentence* s = *it;
@@ -448,8 +490,10 @@ void sentenceListRelease() {
 	SentenceList::iterator it = sList.begin();
 	for (it = sList.begin(); it != sList.end(); ++it) {
 		Sentence* s = *it;
-		delete (s);
-		s = NULL;
+		if (s != NULL) {
+			delete (s);
+			s = NULL;
+		}
 	}
 
 	sList.clear();
@@ -458,7 +502,7 @@ void sentenceListRelease() {
 /*
  * Exit function.
  */
-void exit(){
+void exit() {
 	sentenceListRelease();
 	cout << "# Program exit" << endl;
 	exit(0);
