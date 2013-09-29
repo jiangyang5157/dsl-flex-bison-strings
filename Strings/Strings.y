@@ -460,6 +460,6 @@ void sentenceListRelease() {
  */
 void exit(){
 	sentenceListRelease();
-	cout << "# Program exit." << endl;
+	cout << "# Program exit" << endl;
 	exit(0);
 }
