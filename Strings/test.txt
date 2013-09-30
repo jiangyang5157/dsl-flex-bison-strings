@@ -11,6 +11,8 @@ set sentence one+" sat "+two+" "+three;
 append sentence " "+four+".";
 set test "this is test sentence";
 reverse test; print test;
+reverse test; print test;
+
 logcat ==================== Search ==================== 
 print sentence; 
 printlength sentence; 
@@ -18,11 +20,12 @@ printwordcount sentence;
 printwords sentence; # print each word
 list; # print container 
 # search by vague name
+logcat ==================== Vague Search ==================== 
 print sen*; print en*; print *e; print *nc; 
 print *n*;
 # search by vague content
 search "by"; search "by car";
 logcat ==================== test comment area ====================
-#asd##list; ### list;list;list;#,./;'{}[]!@#$%^&*()\|
+    #asd##list; ### list;list;list;#,./;'{}[]!@#$%^&*()\|
 logcat ==================== end ====================
 exit; # program end

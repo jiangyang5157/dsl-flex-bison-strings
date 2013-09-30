@@ -2098,8 +2098,7 @@ Sentence* reverse(char* name) {
 				strcat(newContent, " ");
 				strcat(newContent, w);
 			}
-
-			ret->content = newContent;
+			strcpy(ret->content, newContent);
 		}
 	} else {
 		cout << "# Cannot find " << name << endl;
@@ -2240,6 +2239,7 @@ void printlnLeftVague(char* name) {
 		char* temp = strstr(s->name, name);
 		if (temp != NULL) {
 			if (strlen(temp) == strlen(name)) {
+				count++;
 				println(s);
 			}
 		}
