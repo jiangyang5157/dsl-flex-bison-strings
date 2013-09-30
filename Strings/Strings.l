@@ -13,15 +13,22 @@ int lineNum = 1;
 
 %}
 %x COMMENT
+%x LOGCAT_STRING
 
 %%
 <INITIAL>{
-"#" BEGIN(COMMENT);
+"#" {BEGIN(COMMENT);}
+"logcat " {BEGIN(LOGCAT_STRING);}
 }
 
 <COMMENT>{
 [\n] {++lineNum; BEGIN(INITIAL);}
-[^\n]* /* Eat anything that's not a '\n' */ 
+[^\n]* {}/* Eat anything that's not a '\n' */ 
+}
+
+<LOGCAT_STRING>{
+[\n] {++lineNum; printf("%s",yytext); BEGIN(INITIAL);}
+[^\n]* {printf("%s",yytext);}
 }
 
 set {return SET;}

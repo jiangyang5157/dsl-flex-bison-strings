@@ -1,17 +1,17 @@
 
-# ---------- add ----------
+logcat ==================== add ==================== 
 set one "The cat"; set three "by"; set four "itself";
 set two one+" "+two+"on the mt"; print two;
-# ---------- delete ----------
+logcat ==================== delete ====================
 set test "asd"; delete test; print test;
-# ---------- modify ----------
+logcat ==================== modify ====================
 modify two "on the mat";
 set sentence one+" sat "+two+" "+three;
 # append str to sentence
 append sentence " "+four+".";
 set test "this is test sentence";
 reverse test; print test;
-# ---------- search ----------
+logcat ==================== Search ==================== 
 print sentence; 
 printlength sentence; 
 printwordcount sentence; 
@@ -22,7 +22,7 @@ print sen*; print en*; print *e; print *nc;
 print *n*;
 # search by vague content
 search "by"; search "by car";
-# ---------- test comment area ----------
+logcat ==================== test comment area ====================
 #asd##list; ### list;list;list;#,./;'{}[]!@#$%^&*()\|
-# ---------- END ----------
+logcat ==================== end ====================
 exit; # program end
