@@ -27,7 +27,6 @@ int lineNum = 1;
 set {return SET;}
 append {return APPEND;}
 reverse {return REVERSE;}
-reversewords {return REVERSE_WORDS;}
 print {return PRINT;}
 printlength {return PRINT_LENGTH;}
 printwordcount {return PRINT_WORD_COUNT;}
