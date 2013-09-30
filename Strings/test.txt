@@ -1,33 +1,28 @@
 
-set one "The cat";
-
-set two one;
-print two;
-set two two+"on the mt"; # modify two
-print two;
-set two "on the mat"; # modify two
-print two;
-
-set three "by";
-set four "itself";
-
+# ---------- add ----------
+set one "The cat"; set three "by"; set four "itself";
+set two one+" "+two+"on the mt"; print two;
+# ---------- delete ----------
+set test "asd"; delete test; print test;
+# ---------- modify ----------
+modify two "on the mat";
 set sentence one+" sat "+two+" "+three;
-# append more str to sentence
+# append str to sentence
 append sentence " "+four+".";
-
-# print sentence's information
-print sentence;
+set test "this is test sentence";
+reverse test; print test;
+# ---------- search ----------
+print sentence; 
 printlength sentence; 
-printwordcount sentence;
-printwords sentence;
-
-list; # list sentence's container 
-
-reverse one; print one; # reverse one and print it
-
-# test inexistent identifier
-append oneeee "asdasd 123456"; reverse oneeee; print oneeee;
-
-# program end
-exit;
-
+printwordcount sentence; 
+printwords sentence; # print each word
+list; # print container 
+# search by vague name
+print sen*; print en*; print *e; print *nc; 
+print *n*;
+# search by vague content
+search "by"; search "by car";
+# ---------- test comment area ----------
+#asd##list; ### list;list;list;#,./;'{}[]!@#$%^&*()\|
+# ---------- END ----------
+exit; # program end

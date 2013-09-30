@@ -59,16 +59,20 @@ extern int yydebug;
      MARK_EXCLAMATORY = 268,
      NEW_LINE = 269,
      DOUBLE_QUOTATION = 270,
-     ADD = 271,
-     SET = 272,
-     APPEND = 273,
-     REVERSE = 274,
-     PRINT = 275,
-     PRINT_LENGTH = 276,
-     PRINT_WORD_COUNT = 277,
-     PRINT_WORDS = 278,
-     LIST = 279,
-     EXIT = 280
+     PLUS = 271,
+     ASTERISK = 272,
+     SET = 273,
+     MODIFY = 274,
+     APPEND = 275,
+     REVERSE = 276,
+     DELETE = 277,
+     PRINT = 278,
+     PRINT_LENGTH = 279,
+     PRINT_WORD_COUNT = 280,
+     PRINT_WORDS = 281,
+     SEARCH = 282,
+     LIST = 283,
+     EXIT = 284
    };
 #endif
 
@@ -77,13 +81,13 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 2053 of yacc.c  */
-#line 51 "Strings.y"
+#line 62 "Strings.y"
 
-  char* strVal;
+	char* strVal;  
 
 
 /* Line 2053 of yacc.c  */
-#line 87 "Strings.tab.h"
+#line 91 "Strings.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

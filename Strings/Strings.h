@@ -28,10 +28,6 @@ public:
 
 	~Sentence() {
 		//std::cout << "Destructor" << std::endl;
-		delete (name);
-		name = NULL;
-		delete (content);
-		content = NULL;
 	}
 };
 

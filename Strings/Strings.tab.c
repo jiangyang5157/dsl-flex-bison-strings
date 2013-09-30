@@ -70,6 +70,7 @@
  */
 #include <cstdio>
 #include <iostream>
+#include <list>
 #include <stdio.h>
 #include <string.h>
 #include "Strings.h"
@@ -77,34 +78,40 @@
 using namespace std;
 
 extern "C" {
-  extern int yylex(void);
-  void yyerror(const char *str);
-  int yyparse(void);
-  int yywrap(void);
-  extern FILE *yyin;
+	extern int yylex(void);
+	void yyerror(const char *str);
+	int yyparse(void);
+	int yywrap(void);
+	extern FILE *yyin;
 }
 
 extern int lineNum;
-
-char* strMerge(char* str1, char* str2);
-void reverse(char* str);
-
 // Sentence's container
 SentenceList sList;
+// Split words
+const char* SPLIT_WORDS = " ,.:;?!";
+
+char* strMerge(char* str1, char* str2);
+void reverseString(char* str);
 
 Sentence* newSentence(char* name);
 Sentence* setSentence(char* name, char* content);
+Sentence* modifySentence(char* name, char* content);
 Sentence* appendSentence(char* name, char* content);
-Sentence* reverseSentence(char* name);
+Sentence* reverse(char* name);
+void deleteSentence(char* name);
 Sentence* getSentence(char* name);
 char* getContent(char* name);
 
 void println(char* name);
 void println(Sentence* s);
+void printlnMidVague(char* name);
+void printlnRightVague(char* name);
+void printlnLeftVague(char* name);
 void printlnLength(char* name);
 void printlnWordCount(char* name);
 void printlnWords(char* name);
-
+void search(char* content);
 void listln();
 
 void sentenceListRelease();
@@ -112,7 +119,7 @@ void exit();
 
 
 /* Line 371 of yacc.c  */
-#line 116 "Strings.tab.c"
+#line 123 "Strings.tab.c"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -161,16 +168,20 @@ extern int yydebug;
      MARK_EXCLAMATORY = 268,
      NEW_LINE = 269,
      DOUBLE_QUOTATION = 270,
-     ADD = 271,
-     SET = 272,
-     APPEND = 273,
-     REVERSE = 274,
-     PRINT = 275,
-     PRINT_LENGTH = 276,
-     PRINT_WORD_COUNT = 277,
-     PRINT_WORDS = 278,
-     LIST = 279,
-     EXIT = 280
+     PLUS = 271,
+     ASTERISK = 272,
+     SET = 273,
+     MODIFY = 274,
+     APPEND = 275,
+     REVERSE = 276,
+     DELETE = 277,
+     PRINT = 278,
+     PRINT_LENGTH = 279,
+     PRINT_WORD_COUNT = 280,
+     PRINT_WORDS = 281,
+     SEARCH = 282,
+     LIST = 283,
+     EXIT = 284
    };
 #endif
 
@@ -179,13 +190,13 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 387 of yacc.c  */
-#line 51 "Strings.y"
+#line 62 "Strings.y"
 
-  char* strVal;
+	char* strVal;  
 
 
 /* Line 387 of yacc.c  */
-#line 189 "Strings.tab.c"
+#line 200 "Strings.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -213,7 +224,7 @@ int yyparse ();
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 217 "Strings.tab.c"
+#line 228 "Strings.tab.c"
 
 #ifdef short
 # undef short
@@ -440,22 +451,22 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  25
+#define YYFINAL  31
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   65
+#define YYLAST   81
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  26
+#define YYNTOKENS  30
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  16
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  42
+#define YYNRULES  48
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  66
+#define YYNSTATES  81
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   280
+#define YYMAXUTOK   284
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -491,7 +502,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      25
+      25,    26,    27,    28,    29
 };
 
 #if YYDEBUG
@@ -500,37 +511,40 @@ static const yytype_uint8 yytranslate[] =
 static const yytype_uint8 yyprhs[] =
 {
        0,     0,     3,     5,     8,    10,    13,    15,    17,    19,
-      25,    31,    35,    39,    43,    47,    51,    53,    56,    58,
-      61,    63,    66,    70,    72,    75,    77,    79,    81,    83,
-      85,    87,    89,    91,    93,    95,    98,   100,   103,   105,
-     107,   109,   111
+      25,    31,    37,    41,    45,    49,    55,    60,    65,    69,
+      73,    77,    81,    83,    86,    88,    91,    93,    96,   100,
+     102,   105,   107,   109,   111,   113,   115,   117,   119,   121,
+     123,   125,   128,   130,   133,   135,   137,   139,   141
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      27,     0,    -1,    28,    -1,    28,    29,    -1,    29,    -1,
-      30,    11,    -1,    41,    -1,    14,    -1,    25,    -1,    17,
-       6,    38,     6,    31,    -1,    18,     6,    38,     6,    31,
-      -1,    19,     6,    38,    -1,    20,     6,    38,    -1,    21,
-       6,    38,    -1,    22,     6,    38,    -1,    23,     6,    38,
-      -1,    24,    -1,    34,    32,    -1,    34,    -1,    32,    33,
-      -1,    33,    -1,    16,    34,    -1,    15,    35,    15,    -1,
-      38,    -1,    35,    36,    -1,    36,    -1,    40,    -1,    37,
-      -1,    41,    -1,     8,    -1,     9,    -1,    10,    -1,    11,
-      -1,    12,    -1,    13,    -1,     4,    39,    -1,     4,    -1,
-      39,    40,    -1,    40,    -1,     4,    -1,     3,    -1,     6,
+      31,     0,    -1,    32,    -1,    32,    33,    -1,    33,    -1,
+      34,    11,    -1,    45,    -1,    14,    -1,    29,    -1,    18,
+       6,    42,     6,    35,    -1,    19,     6,    42,     6,    35,
+      -1,    20,     6,    42,     6,    35,    -1,    21,     6,    42,
+      -1,    22,     6,    42,    -1,    23,     6,    42,    -1,    23,
+       6,    17,    42,    17,    -1,    23,     6,    42,    17,    -1,
+      23,     6,    17,    42,    -1,    24,     6,    42,    -1,    25,
+       6,    42,    -1,    26,     6,    42,    -1,    27,     6,    35,
+      -1,    28,    -1,    38,    36,    -1,    38,    -1,    36,    37,
+      -1,    37,    -1,    16,    38,    -1,    15,    39,    15,    -1,
+      42,    -1,    39,    40,    -1,    40,    -1,    44,    -1,    41,
+      -1,    45,    -1,     8,    -1,     9,    -1,    10,    -1,    11,
+      -1,    12,    -1,    13,    -1,     4,    43,    -1,     4,    -1,
+      43,    44,    -1,    44,    -1,     4,    -1,     3,    -1,     6,
       -1,     7,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    99,    99,   103,   104,   108,   109,   110,   114,   115,
-     116,   117,   118,   119,   120,   121,   122,   126,   127,   131,
-     132,   136,   140,   141,   145,   146,   150,   151,   152,   156,
-     157,   158,   159,   160,   161,   165,   166,   170,   171,   175,
-     176,   180,   181
+       0,   114,   114,   118,   119,   123,   124,   125,   129,   130,
+     131,   132,   133,   134,   135,   136,   137,   138,   139,   140,
+     141,   142,   143,   147,   148,   152,   153,   157,   161,   162,
+     166,   167,   171,   172,   173,   177,   178,   179,   180,   181,
+     182,   186,   187,   191,   192,   196,   197,   201,   202
 };
 #endif
 
@@ -542,11 +556,12 @@ static const char *const yytname[] =
   "$end", "error", "$undefined", "DIGIT", "LETTER", "PUNCTUATION",
   "SPACE", "TAB", "MARK_COMMA", "MARK_FULL_STOP", "MARK_COLON",
   "MARK_SEMICOLON", "MARK_QUESTION", "MARK_EXCLAMATORY", "NEW_LINE",
-  "DOUBLE_QUOTATION", "ADD", "SET", "APPEND", "REVERSE", "PRINT",
-  "PRINT_LENGTH", "PRINT_WORD_COUNT", "PRINT_WORDS", "LIST", "EXIT",
-  "$accept", "program", "statements", "statement", "declare", "expression",
-  "appendValues", "appendValue", "value", "literals", "literal",
-  "punctuation", "identifier", "alphanums", "alphanum", "blank", YY_NULL
+  "DOUBLE_QUOTATION", "PLUS", "ASTERISK", "SET", "MODIFY", "APPEND",
+  "REVERSE", "DELETE", "PRINT", "PRINT_LENGTH", "PRINT_WORD_COUNT",
+  "PRINT_WORDS", "SEARCH", "LIST", "EXIT", "$accept", "program",
+  "statements", "statement", "declare", "expression", "appendValues",
+  "appendValue", "value", "literals", "literal", "punctuation",
+  "identifier", "alphanums", "alphanum", "blank", YY_NULL
 };
 #endif
 
@@ -557,28 +572,28 @@ static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
-     275,   276,   277,   278,   279,   280
+     275,   276,   277,   278,   279,   280,   281,   282,   283,   284
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    26,    27,    28,    28,    29,    29,    29,    30,    30,
-      30,    30,    30,    30,    30,    30,    30,    31,    31,    32,
-      32,    33,    34,    34,    35,    35,    36,    36,    36,    37,
-      37,    37,    37,    37,    37,    38,    38,    39,    39,    40,
-      40,    41,    41
+       0,    30,    31,    32,    32,    33,    33,    33,    34,    34,
+      34,    34,    34,    34,    34,    34,    34,    34,    34,    34,
+      34,    34,    34,    35,    35,    36,    36,    37,    38,    38,
+      39,    39,    40,    40,    40,    41,    41,    41,    41,    41,
+      41,    42,    42,    43,    43,    44,    44,    45,    45
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
        0,     2,     1,     2,     1,     2,     1,     1,     1,     5,
-       5,     3,     3,     3,     3,     3,     1,     2,     1,     2,
-       1,     2,     3,     1,     2,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     2,     1,     2,     1,     1,
-       1,     1,     1
+       5,     5,     3,     3,     3,     5,     4,     4,     3,     3,
+       3,     3,     1,     2,     1,     2,     1,     2,     3,     1,
+       2,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     2,     1,     2,     1,     1,     1,     1,     1
 };
 
 /* YYDEFACT[STATE-NAME] -- Default reduction number in state STATE-NUM.
@@ -586,41 +601,45 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       0,    41,    42,     7,     0,     0,     0,     0,     0,     0,
-       0,    16,     8,     0,     2,     4,     0,     6,     0,     0,
-       0,     0,     0,     0,     0,     1,     3,     5,    36,     0,
-       0,    11,    12,    13,    14,    15,    40,    39,    35,    38,
-       0,     0,    37,     0,     9,    18,    23,    10,    29,    30,
-      31,    32,    33,    34,     0,    25,    27,    26,    28,     0,
-      17,    20,    22,    24,    21,    19
+       0,    47,    48,     7,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,    22,     8,     0,     2,     4,     0,
+       6,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     1,     3,     5,    42,     0,     0,     0,    12,    13,
+       0,    14,    18,    19,    20,     0,    21,    24,    29,    46,
+      45,    41,    44,     0,     0,     0,    17,    16,    35,    36,
+      37,    38,    39,    40,     0,    31,    33,    32,    34,     0,
+      23,    26,    43,     9,    10,    11,    15,    28,    30,    27,
+      25
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,    13,    14,    15,    16,    44,    60,    61,    45,    54,
-      55,    56,    46,    38,    57,    17
+      -1,    16,    17,    18,    19,    46,    70,    71,    47,    64,
+      65,    66,    48,    51,    67,    20
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -22
+#define YYPACT_NINF -52
 static const yytype_int8 yypact[] =
 {
-      -6,   -22,   -22,   -22,    -2,     0,     1,     3,     4,    28,
-      29,   -22,   -22,     5,    -6,   -22,    25,   -22,    33,    33,
-      33,    33,    33,    33,    33,   -22,   -22,   -22,    -1,    32,
-      53,   -22,   -22,   -22,   -22,   -22,   -22,   -22,    -1,   -22,
-      18,    18,   -22,    37,   -22,    44,   -22,   -22,   -22,   -22,
-     -22,   -22,   -22,   -22,    17,   -22,   -22,   -22,   -22,    18,
-      44,   -22,   -22,   -22,   -22,   -22
+      -6,   -52,   -52,   -52,     1,     4,     5,    33,    34,    35,
+      36,    38,    39,    40,   -52,   -52,     9,    -6,   -52,    26,
+     -52,    45,    45,    45,    45,    45,    31,    45,    45,    45,
+      32,   -52,   -52,   -52,     2,    44,    49,    58,   -52,   -52,
+      45,    21,   -52,   -52,   -52,    63,   -52,    52,   -52,   -52,
+     -52,     2,   -52,    32,    32,    32,    60,   -52,   -52,   -52,
+     -52,   -52,   -52,   -52,    50,   -52,   -52,   -52,   -52,    32,
+      52,   -52,   -52,   -52,   -52,   -52,   -52,   -52,   -52,   -52,
+     -52
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -22,   -22,   -22,    48,   -22,    22,   -22,   -21,     6,   -22,
-      10,   -22,    34,   -22,    23,   -12
+     -52,   -52,   -52,    61,   -52,   -51,   -52,    10,    12,   -52,
+      15,   -52,     3,   -52,     0,   -12
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -629,43 +648,49 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-       1,     2,    36,    37,    18,    25,    19,    20,     3,    21,
-      22,     4,     5,     6,     7,     8,     9,    10,    11,    12,
-      36,    37,    28,     1,     2,    48,    49,    50,    51,    52,
-      53,    58,    62,    43,    23,    24,    27,    28,    40,    65,
-      36,    37,    58,     1,     2,    48,    49,    50,    51,    52,
-      53,    39,    29,    30,    31,    32,    33,    34,    35,    41,
-      59,    42,    26,    47,    63,    64
+       1,     2,    73,    74,    75,    49,    50,    21,     3,    31,
+      22,    23,     4,     5,     6,     7,     8,     9,    10,    11,
+      12,    13,    14,    15,    35,    36,    37,    38,    39,    41,
+      42,    43,    44,    68,    52,    34,    34,    33,    57,    24,
+      25,    26,    27,    56,    28,    29,    30,    45,    40,    34,
+      53,    72,    68,    49,    50,    54,     1,     2,    58,    59,
+      60,    61,    62,    63,    55,    77,    49,    50,    69,     1,
+       2,    58,    59,    60,    61,    62,    63,    76,    32,    78,
+      80,    79
 };
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-22)))
+  (!!((Yystate) == (-52)))
 
 #define yytable_value_is_error(Yytable_value) \
   YYID (0)
 
 static const yytype_uint8 yycheck[] =
 {
-       6,     7,     3,     4,     6,     0,     6,     6,    14,     6,
-       6,    17,    18,    19,    20,    21,    22,    23,    24,    25,
-       3,     4,     4,     6,     7,     8,     9,    10,    11,    12,
-      13,    43,    15,    15,     6,     6,    11,     4,     6,    60,
-       3,     4,    54,     6,     7,     8,     9,    10,    11,    12,
-      13,    28,    18,    19,    20,    21,    22,    23,    24,     6,
-      16,    38,    14,    41,    54,    59
+       6,     7,    53,    54,    55,     3,     4,     6,    14,     0,
+       6,     6,    18,    19,    20,    21,    22,    23,    24,    25,
+      26,    27,    28,    29,    21,    22,    23,    24,    25,    26,
+      27,    28,    29,    45,    34,     4,     4,    11,    17,     6,
+       6,     6,     6,    40,     6,     6,     6,    15,    17,     4,
+       6,    51,    64,     3,     4,     6,     6,     7,     8,     9,
+      10,    11,    12,    13,     6,    15,     3,     4,    16,     6,
+       7,     8,     9,    10,    11,    12,    13,    17,    17,    64,
+      70,    69
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     6,     7,    14,    17,    18,    19,    20,    21,    22,
-      23,    24,    25,    27,    28,    29,    30,    41,     6,     6,
-       6,     6,     6,     6,     6,     0,    29,    11,     4,    38,
-      38,    38,    38,    38,    38,    38,     3,     4,    39,    40,
-       6,     6,    40,    15,    31,    34,    38,    31,     8,     9,
-      10,    11,    12,    13,    35,    36,    37,    40,    41,    16,
-      32,    33,    15,    36,    34,    33
+       0,     6,     7,    14,    18,    19,    20,    21,    22,    23,
+      24,    25,    26,    27,    28,    29,    31,    32,    33,    34,
+      45,     6,     6,     6,     6,     6,     6,     6,     6,     6,
+       6,     0,    33,    11,     4,    42,    42,    42,    42,    42,
+      17,    42,    42,    42,    42,    15,    35,    38,    42,     3,
+       4,    43,    44,     6,     6,     6,    42,    17,     8,     9,
+      10,    11,    12,    13,    39,    40,    41,    44,    45,    16,
+      36,    37,    44,    35,    35,    35,    17,    15,    40,    38,
+      37
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1458,217 +1483,253 @@ yyreduce:
     {
         case 8:
 /* Line 1787 of yacc.c  */
-#line 114 "Strings.y"
+#line 129 "Strings.y"
     {exit();}
     break;
 
   case 9:
 /* Line 1787 of yacc.c  */
-#line 115 "Strings.y"
+#line 130 "Strings.y"
     {setSentence((yyvsp[(3) - (5)].strVal), (yyvsp[(5) - (5)].strVal));}
     break;
 
   case 10:
 /* Line 1787 of yacc.c  */
-#line 116 "Strings.y"
-    {appendSentence((yyvsp[(3) - (5)].strVal), (yyvsp[(5) - (5)].strVal));}
+#line 131 "Strings.y"
+    {modifySentence((yyvsp[(3) - (5)].strVal), (yyvsp[(5) - (5)].strVal));}
     break;
 
   case 11:
 /* Line 1787 of yacc.c  */
-#line 117 "Strings.y"
-    {reverseSentence((yyvsp[(3) - (3)].strVal));}
+#line 132 "Strings.y"
+    {appendSentence((yyvsp[(3) - (5)].strVal), (yyvsp[(5) - (5)].strVal));}
     break;
 
   case 12:
 /* Line 1787 of yacc.c  */
-#line 118 "Strings.y"
-    {println((yyvsp[(3) - (3)].strVal));}
+#line 133 "Strings.y"
+    {reverse((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 13:
 /* Line 1787 of yacc.c  */
-#line 119 "Strings.y"
-    {printlnLength((yyvsp[(3) - (3)].strVal));}
+#line 134 "Strings.y"
+    {deleteSentence((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 14:
 /* Line 1787 of yacc.c  */
-#line 120 "Strings.y"
-    {printlnWordCount((yyvsp[(3) - (3)].strVal));}
+#line 135 "Strings.y"
+    {println((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 15:
 /* Line 1787 of yacc.c  */
-#line 121 "Strings.y"
-    {printlnWords((yyvsp[(3) - (3)].strVal));}
+#line 136 "Strings.y"
+    {printlnMidVague((yyvsp[(4) - (5)].strVal));}
     break;
 
   case 16:
 /* Line 1787 of yacc.c  */
-#line 122 "Strings.y"
-    {listln();}
+#line 137 "Strings.y"
+    {printlnRightVague((yyvsp[(3) - (4)].strVal));}
     break;
 
   case 17:
 /* Line 1787 of yacc.c  */
-#line 126 "Strings.y"
-    {strcpy((yyval.strVal), strMerge((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal)));}
+#line 138 "Strings.y"
+    {printlnLeftVague((yyvsp[(4) - (4)].strVal));}
     break;
 
   case 18:
 /* Line 1787 of yacc.c  */
-#line 127 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 139 "Strings.y"
+    {printlnLength((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 19:
 /* Line 1787 of yacc.c  */
-#line 131 "Strings.y"
-    {strcpy((yyval.strVal), strMerge((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal)));}
+#line 140 "Strings.y"
+    {printlnWordCount((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 20:
 /* Line 1787 of yacc.c  */
-#line 132 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 141 "Strings.y"
+    {printlnWords((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 21:
 /* Line 1787 of yacc.c  */
-#line 136 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(2) - (2)].strVal);}
+#line 142 "Strings.y"
+    {search((yyvsp[(3) - (3)].strVal));}
     break;
 
   case 22:
 /* Line 1787 of yacc.c  */
-#line 140 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(2) - (3)].strVal);}
+#line 143 "Strings.y"
+    {listln();}
     break;
 
   case 23:
 /* Line 1787 of yacc.c  */
-#line 141 "Strings.y"
-    {(yyval.strVal) = getContent((yyvsp[(1) - (1)].strVal));}
+#line 147 "Strings.y"
+    {strcpy((yyval.strVal), strMerge((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal)));}
     break;
 
   case 24:
 /* Line 1787 of yacc.c  */
-#line 145 "Strings.y"
-    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
+#line 148 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 25:
 /* Line 1787 of yacc.c  */
-#line 146 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 152 "Strings.y"
+    {strcpy((yyval.strVal), strMerge((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal)));}
     break;
 
   case 26:
 /* Line 1787 of yacc.c  */
-#line 150 "Strings.y"
+#line 153 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 27:
 /* Line 1787 of yacc.c  */
-#line 151 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 157 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(2) - (2)].strVal);}
     break;
 
   case 28:
 /* Line 1787 of yacc.c  */
-#line 152 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 161 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(2) - (3)].strVal);}
     break;
 
   case 29:
 /* Line 1787 of yacc.c  */
-#line 156 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 162 "Strings.y"
+    {(yyval.strVal) = getContent((yyvsp[(1) - (1)].strVal));}
     break;
 
   case 30:
 /* Line 1787 of yacc.c  */
-#line 157 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+#line 166 "Strings.y"
+    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
     break;
 
   case 31:
 /* Line 1787 of yacc.c  */
-#line 158 "Strings.y"
+#line 167 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 32:
 /* Line 1787 of yacc.c  */
-#line 159 "Strings.y"
+#line 171 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 33:
 /* Line 1787 of yacc.c  */
-#line 160 "Strings.y"
+#line 172 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 34:
 /* Line 1787 of yacc.c  */
-#line 161 "Strings.y"
+#line 173 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 35:
 /* Line 1787 of yacc.c  */
-#line 165 "Strings.y"
-    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
+#line 177 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 36:
 /* Line 1787 of yacc.c  */
-#line 166 "Strings.y"
+#line 178 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 37:
 /* Line 1787 of yacc.c  */
-#line 170 "Strings.y"
-    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
+#line 179 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
   case 38:
-/* Line 1787 of yacc.c  */
-#line 171 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
-    break;
-
-  case 39:
-/* Line 1787 of yacc.c  */
-#line 175 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
-    break;
-
-  case 40:
-/* Line 1787 of yacc.c  */
-#line 176 "Strings.y"
-    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
-    break;
-
-  case 41:
 /* Line 1787 of yacc.c  */
 #line 180 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
-  case 42:
+  case 39:
 /* Line 1787 of yacc.c  */
 #line 181 "Strings.y"
     {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
     break;
 
+  case 40:
+/* Line 1787 of yacc.c  */
+#line 182 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+    break;
+
+  case 41:
+/* Line 1787 of yacc.c  */
+#line 186 "Strings.y"
+    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
+    break;
+
+  case 42:
+/* Line 1787 of yacc.c  */
+#line 187 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+    break;
+
+  case 43:
+/* Line 1787 of yacc.c  */
+#line 191 "Strings.y"
+    {(yyval.strVal) = strcat((yyvsp[(1) - (2)].strVal), (yyvsp[(2) - (2)].strVal));}
+    break;
+
+  case 44:
+/* Line 1787 of yacc.c  */
+#line 192 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+    break;
+
+  case 45:
+/* Line 1787 of yacc.c  */
+#line 196 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+    break;
+
+  case 46:
+/* Line 1787 of yacc.c  */
+#line 197 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+    break;
+
+  case 47:
+/* Line 1787 of yacc.c  */
+#line 201 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+    break;
+
+  case 48:
+/* Line 1787 of yacc.c  */
+#line 202 "Strings.y"
+    {(yyval.strVal) = (yyvsp[(1) - (1)].strVal);}
+    break;
+
 
 /* Line 1787 of yacc.c  */
-#line 1672 "Strings.tab.c"
+#line 1733 "Strings.tab.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1900,7 +1961,7 @@ yyreturn:
 
 
 /* Line 2050 of yacc.c  */
-#line 184 "Strings.y"
+#line 205 "Strings.y"
 
 /*
  * Additional C++ code
@@ -1910,6 +1971,9 @@ int yywrap(void) {
 	return 1;
 }
 
+/*
+ * User-supplied function to be called by yyparse on error.
+ */ 
 void yyerror(const char *str) {
 	cout << "Parse error on line: " << lineNum << "! Message: " << str << endl;
 	exit(1);
@@ -1922,7 +1986,7 @@ main() {
 	// Test by a commend-file
 	FILE *testFile = fopen("test.txt", "r");
 	if (!testFile) {
-		cout << "Cannot open test.txt!" << endl;
+		cout << "# Cannot open test.txt!" << endl;
 		return 0;
 	}
 
@@ -1931,8 +1995,11 @@ main() {
 
 	// Parse through the input until there is no more
 	do {
+		// It reads tokens, executes actions
+		// ultimately returns when it encounters end-of-input 
+		// or an unrecoverable syntax error.
 		yyparse();
-	} while (!feof(yyin));
+	}while (!feof(yyin));
 
 	return 0;
 }
@@ -1940,7 +2007,7 @@ main() {
 /*
  * Return a new string by merging two string.
  */
-char* strMerge(char* str1, char* str2){
+char* strMerge(char* str1, char* str2) {
 	char* ret = strdup(str1);
 	strcat(ret, str2);
 	return ret;
@@ -1957,17 +2024,32 @@ Sentence* newSentence(char* name) {
 }
 
 /*
- * Get the sentence by a given name, and set its content.
+ * Create a sentence by a given name, and set its content.
  */
 Sentence* setSentence(char* name, char* content) {
 	Sentence* ret = getSentence(name);
 
-	// Create a new sentence if the sentence did not exist in the container
 	if (ret == NULL) {
 		ret = newSentence(name);
+		ret->content = strdup(content);
+	} else {
+		cout << "# Existing identifier: " << name << endl;
 	}
 
-	ret->content = strdup(content);
+	return ret;
+}
+
+/*
+ * Get the sentence by a given name, and set its content.
+ */
+Sentence* modifySentence(char* name, char* content) {
+	Sentence* ret = getSentence(name);
+
+	if (ret != NULL) {
+		ret->content = strdup(content);
+	} else {
+		cout << "# Cannot find " << name << endl;
+	}
 
 	return ret;
 }
@@ -1979,9 +2061,9 @@ Sentence* appendSentence(char* name, char* content) {
 	Sentence* ret = getSentence(name);
 
 	if (ret != NULL) {
-	  if (ret->content == NULL){
+		if (ret->content == NULL) {
 			ret->content = strdup(content);
-		}else{
+		} else {
 			strcat(ret->content, content);
 		}
 	} else {
@@ -1994,11 +2076,31 @@ Sentence* appendSentence(char* name, char* content) {
 /*
  * Get the sentence by a given name, and reverse its content.
  */
-Sentence* reverseSentence(char* name) {
+Sentence* reverse(char* name) {
 	Sentence* ret = getSentence(name);
 
 	if (ret != NULL) {
-		reverse(ret->content);
+		char* cTemp = strdup(ret->content);
+
+		list<char*> wordList;
+		char* word = strtok(cTemp, SPLIT_WORDS);
+		while (word != NULL) {
+			wordList.push_front(word);
+			word = strtok(NULL, SPLIT_WORDS);
+		}
+
+		if (wordList.size() > 0) {
+			list<char*>::iterator it = wordList.begin();
+			char* firstWord = *it;
+			char* newContent = strdup(firstWord);
+			for (++it; it != wordList.end(); ++it) {
+				char* w = *it;
+				strcat(newContent, " ");
+				strcat(newContent, w);
+			}
+
+			ret->content = newContent;
+		}
 	} else {
 		cout << "# Cannot find " << name << endl;
 	}
@@ -2007,13 +2109,15 @@ Sentence* reverseSentence(char* name) {
 }
 
 /*
- * Reverse a str.
+ * Delete sentence by a given name.
  */
-void reverse(char* str){
-	char* strTemp = strdup(str);
+void deleteSentence(char* name) {
+	Sentence* s = getSentence(name);
 
-	for (strTemp = strchr(str, 0) - 1; str < strTemp; ++str, --strTemp){
-		std::swap(*str, *strTemp);
+	if (s != NULL) {
+		sList.remove(s);
+	} else {
+		cout << "# Cannot find " << name << endl;
 	}
 }
 
@@ -2026,10 +2130,9 @@ Sentence* getSentence(char* name) {
 	SentenceList::iterator it;
 	for (it = sList.begin(); it != sList.end(); ++it) {
 		Sentence* s = *it;
-
 		if (strcmp(s->name, name) == 0) {
-			// Same name
 			ret = s;
+			break;
 		}
 	}
 
@@ -2045,16 +2148,14 @@ char* getContent(char* name) {
 	SentenceList::iterator it;
 	for (it = sList.begin(); it != sList.end(); ++it) {
 		Sentence* s = *it;
-
 		if (strcmp(s->name, name) == 0) {
-			// Same name
 			ret = strdup(s->content);
+			break;
 		}
 	}
 
-	if (ret == NULL){
-		// Cannot file the sentence
-		cout << "Cannot find " << name << endl;
+	if (ret == NULL) {
+		cout << "# Cannot find " << name << endl;
 		ret = strdup("");
 	}
 
@@ -2064,11 +2165,11 @@ char* getContent(char* name) {
 /*
  * Print a sentence by a given name.
  */
-void println(char* name){
+void println(char* name) {
 	Sentence* s = getSentence(name);
-	if (s != NULL){
+	if (s != NULL) {
 		cout << s->name << ": " << "\"" << s->content << "\"" << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -2076,26 +2177,112 @@ void println(char* name){
 /*
  * Print the sentence.
  */
-void println(Sentence* s){
-	if (s != NULL){
+void println(Sentence* s) {
+	if (s != NULL) {
 		cout << s->name << ": " << "\"" << s->content << "\"" << endl;
-	}else{
+	} else {
 		cout << "# Cannot find it" << endl;
+	}
+}
+
+/*
+ * Print the sentence by a mid vagur name
+ */
+void printlnMidVague(char* name) {
+	int count = 0;
+	SentenceList::iterator it;
+	for (it = sList.begin(); it != sList.end(); ++it) {
+		Sentence* s = *it;
+
+		char* temp = strstr(s->name, name);
+		if (temp != NULL) {
+			count++;
+			println(s);
+		}
+	}
+
+	if (count == 0) {
+		cout << "# Cannot find *" << name << "*" << endl;
+	}
+}
+
+/*
+ * Print the sentence by a right vagur name
+ */
+void printlnRightVague(char* name) {
+	int count = 0;
+	SentenceList::iterator it;
+	for (it = sList.begin(); it != sList.end(); ++it) {
+		Sentence* s = *it;
+		char* temp = strstr(s->name, name);
+		if (temp != NULL) {
+			if (strlen(temp) == strlen(s->name)) {
+				count++;
+				println(s);
+			}
+		}
+	}
+
+	if (count == 0) {
+		cout << "# Cannot find " << name << "*" << endl;
+	}
+}
+
+/*
+ * Print the sentence by a left vagur name
+ */
+void printlnLeftVague(char* name) {
+	int count = 0;
+	SentenceList::iterator it;
+	for (it = sList.begin(); it != sList.end(); ++it) {
+		Sentence* s = *it;
+
+		char* temp = strstr(s->name, name);
+		if (temp != NULL) {
+			if (strlen(temp) == strlen(name)) {
+				println(s);
+			}
+		}
+	}
+
+	if (count == 0) {
+		cout << "# Cannot find *" << name << endl;
+	}
+}
+
+/*
+ * Search the sentence's content by a left vagur content
+ */
+void search(char* content) {
+	int count = 0;
+	SentenceList::iterator it;
+	for (it = sList.begin(); it != sList.end(); ++it) {
+		Sentence* s = *it;
+
+		char* temp = strstr(s->content, content);
+		if (temp != NULL) {
+			count++;
+			println(s);
+		}
+	}
+
+	if (count == 0) {
+		cout << "# Cannot find any with content \"" << content << "\"" << endl;
 	}
 }
 
 /*
  * Print a sentence's length by a given name.
  */
-void printlnLength(char* name){
+void printlnLength(char* name) {
 	Sentence* s = getSentence(name);
-	if (s != NULL){
+	if (s != NULL) {
 		int length = 0;
-		if (s->content != NULL){
+		if (s->content != NULL) {
 			length = strlen(s->content);
 		}
 		cout << "Length of " << s->name << " is: " << length << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -2103,22 +2290,18 @@ void printlnLength(char* name){
 /*
  * Print a sentence's word count by a given name.
  */
-void printlnWordCount(char* name){
+void printlnWordCount(char* name) {
 	Sentence* s = getSentence(name);
-
-	if (s != NULL){
+	if (s != NULL) {
 		char* cTemp = strdup(s->content);
-		// chars for splitting two word
-		char* split = strdup(" ,.:;?!");
-
 		int count = 0;
-		char* word = strtok(cTemp, split);
+		char* word = strtok(cTemp, SPLIT_WORDS);
 		while (word != NULL) {
-			word = strtok(NULL, split);
 			count++;
+			word = strtok(NULL, SPLIT_WORDS);
 		}
 		cout << "Wordcount of " << name << "is: " << count << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -2126,21 +2309,18 @@ void printlnWordCount(char* name){
 /*
  * Print a sentence's words by a given name.
  */
-void printlnWords(char* name){
-	Sentence* s = getSentence(name);
-
+void printlnWords(char* name) {
 	cout << "Words of " << name << " are: " << endl;
-	if (s != NULL){
+	Sentence* s = getSentence(name);
+	if (s != NULL) {
 		char* cTemp = strdup(s->content);
-		// chars for splitting two word
-		char* split = strdup(" ,.:;?!");
 
-		char* word = strtok(cTemp, split);
+		char* word = strtok(cTemp, SPLIT_WORDS);
 		while (word != NULL) {
 			cout << word << endl;
-			word = strtok(NULL, split);
+			word = strtok(NULL, SPLIT_WORDS);
 		}
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -2148,11 +2328,10 @@ void printlnWords(char* name){
 /*
  * Print the sentence's container.
  */
-void listln(){
+void listln() {
 	int size = sList.size();
 	cout << "Identifier list (" << size << "):" << endl;
-
-	if (size > 0){
+	if (size > 0) {
 		SentenceList::iterator it;
 		for (it = sList.begin(); it != sList.end(); ++it) {
 			Sentence* s = *it;
@@ -2168,18 +2347,19 @@ void sentenceListRelease() {
 	SentenceList::iterator it = sList.begin();
 	for (it = sList.begin(); it != sList.end(); ++it) {
 		Sentence* s = *it;
-		delete (s);
-		s = NULL;
+		if (s != NULL) {
+			delete (s);
+			s = NULL;
+		}
 	}
-
 	sList.clear();
 }
 
 /*
  * Exit function.
  */
-void exit(){
+void exit() {
 	sentenceListRelease();
-	cout << "# Program exit." << endl;
+	cout << "# Program exit" << endl;
 	exit(0);
 }

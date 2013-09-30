@@ -25,12 +25,15 @@ int lineNum = 1;
 }
 
 set {return SET;}
+modify {return MODIFY;}
 append {return APPEND;}
 reverse {return REVERSE;}
+delete {return DELETE;}
 print {return PRINT;}
 printlength {return PRINT_LENGTH;}
 printwordcount {return PRINT_WORD_COUNT;}
 printwords {return PRINT_WORDS;}
+search {return SEARCH;}
 list {return LIST;}
 exit {return EXIT;}
 
@@ -38,7 +41,8 @@ exit {return EXIT;}
 [\t] {yylval.strVal = strdup(yytext); return TAB;}
 [\n] {++lineNum; return NEW_LINE;}
 [\"] {return DOUBLE_QUOTATION;}
-[+] {return ADD;}
+[\+] {return PLUS;}
+[\*] {return ASTERISK;}
 
 [0-9]+ {yylval.strVal = strdup(yytext); return DIGIT;}
 [a-zA-Z]+ {yylval.strVal = strdup(yytext); return LETTER;}

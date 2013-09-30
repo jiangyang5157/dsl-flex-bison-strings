@@ -4,6 +4,7 @@
  */
 #include <cstdio>
 #include <iostream>
+#include <list>
 #include <stdio.h>
 #include <string.h>
 #include "Strings.h"
@@ -11,34 +12,40 @@
 using namespace std;
 
 extern "C" {
-  extern int yylex(void);
-  void yyerror(const char *str);
-  int yyparse(void);
-  int yywrap(void);
-  extern FILE *yyin;
+	extern int yylex(void);
+	void yyerror(const char *str);
+	int yyparse(void);
+	int yywrap(void);
+	extern FILE *yyin;
 }
 
 extern int lineNum;
-
-char* strMerge(char* str1, char* str2);
-void reverse(char* str);
-
 // Sentence's container
 SentenceList sList;
+// Split words
+const char* SPLIT_WORDS = " ,.:;?!";
+
+char* strMerge(char* str1, char* str2);
+void reverseString(char* str);
 
 Sentence* newSentence(char* name);
 Sentence* setSentence(char* name, char* content);
+Sentence* modifySentence(char* name, char* content);
 Sentence* appendSentence(char* name, char* content);
-Sentence* reverseSentence(char* name);
+Sentence* reverse(char* name);
+void deleteSentence(char* name);
 Sentence* getSentence(char* name);
 char* getContent(char* name);
 
 void println(char* name);
 void println(Sentence* s);
+void printlnMidVague(char* name);
+void printlnRightVague(char* name);
+void printlnLeftVague(char* name);
 void printlnLength(char* name);
 void printlnWordCount(char* name);
 void printlnWords(char* name);
-
+void search(char* content);
 void listln();
 
 void sentenceListRelease();
@@ -48,8 +55,12 @@ void exit();
 /*
  * Bison declarations
  */
+ 
+/*
+ * Declare the collection of data types that semantic values may have.
+ */ 
 %union {
-  char* strVal;
+	char* strVal;  
 }
 
 %token <strVal> DIGIT 
@@ -66,15 +77,19 @@ void exit();
 
 %token NEW_LINE 
 %token DOUBLE_QUOTATION 
-%token ADD
+%token PLUS
+%token ASTERISK
 
 %token SET 
+%token MODIFY
 %token APPEND 
 %token REVERSE 
+%token DELETE
 %token PRINT 
 %token PRINT_LENGTH 
 %token PRINT_WORD_COUNT 
 %token PRINT_WORDS 
+%token SEARCH
 %token LIST 
 %token EXIT
 
@@ -82,7 +97,7 @@ void exit();
 %type <strVal> value 
 %type <strVal> appendValues 
 %type <strVal> appendValue 
-%type <strVal> identifier 
+%type <strVal> identifier
 %type <strVal> alphanums 
 %type <strVal> alphanum 
 %type <strVal> literals 
@@ -113,12 +128,18 @@ statement:
 declare:
   EXIT {exit();}
   | SET SPACE identifier SPACE expression {setSentence($3, $5);}
+  | MODIFY SPACE identifier SPACE expression {modifySentence($3, $5);}
   | APPEND SPACE identifier SPACE expression {appendSentence($3, $5);}
-  | REVERSE SPACE identifier {reverseSentence($3);}
+  | REVERSE SPACE identifier {reverse($3);}
+  | DELETE SPACE identifier {deleteSentence($3);}
   | PRINT SPACE identifier {println($3);}
+  | PRINT SPACE ASTERISK identifier ASTERISK {printlnMidVague($4);}
+  | PRINT SPACE identifier ASTERISK {printlnRightVague($3);}
+  | PRINT SPACE ASTERISK identifier {printlnLeftVague($4);}
   | PRINT_LENGTH SPACE identifier {printlnLength($3);}
   | PRINT_WORD_COUNT SPACE identifier {printlnWordCount($3);}
   | PRINT_WORDS SPACE identifier {printlnWords($3);}
+  | SEARCH SPACE expression {search($3);} 
   | LIST {listln();}
   ;
 
@@ -133,7 +154,7 @@ appendValues:
   ;
 
 appendValue:
-  ADD value {$$ = $2;}
+  PLUS value {$$ = $2;}
   ;
   
 value:
@@ -190,6 +211,9 @@ int yywrap(void) {
 	return 1;
 }
 
+/*
+ * User-supplied function to be called by yyparse on error.
+ */ 
 void yyerror(const char *str) {
 	cout << "Parse error on line: " << lineNum << "! Message: " << str << endl;
 	exit(1);
@@ -202,7 +226,7 @@ main() {
 	// Test by a commend-file
 	FILE *testFile = fopen("test.txt", "r");
 	if (!testFile) {
-		cout << "Cannot open test.txt!" << endl;
+		cout << "# Cannot open test.txt!" << endl;
 		return 0;
 	}
 
@@ -211,8 +235,11 @@ main() {
 
 	// Parse through the input until there is no more
 	do {
+		// It reads tokens, executes actions
+		// ultimately returns when it encounters end-of-input 
+		// or an unrecoverable syntax error.
 		yyparse();
-	} while (!feof(yyin));
+	}while (!feof(yyin));
 
 	return 0;
 }
@@ -220,7 +247,7 @@ main() {
 /*
  * Return a new string by merging two string.
  */
-char* strMerge(char* str1, char* str2){
+char* strMerge(char* str1, char* str2) {
 	char* ret = strdup(str1);
 	strcat(ret, str2);
 	return ret;
@@ -237,17 +264,32 @@ Sentence* newSentence(char* name) {
 }
 
 /*
- * Get the sentence by a given name, and set its content.
+ * Create a sentence by a given name, and set its content.
  */
 Sentence* setSentence(char* name, char* content) {
 	Sentence* ret = getSentence(name);
 
-	// Create a new sentence if the sentence did not exist in the container
 	if (ret == NULL) {
 		ret = newSentence(name);
+		ret->content = strdup(content);
+	} else {
+		cout << "# Existing identifier: " << name << endl;
 	}
 
-	ret->content = strdup(content);
+	return ret;
+}
+
+/*
+ * Get the sentence by a given name, and set its content.
+ */
+Sentence* modifySentence(char* name, char* content) {
+	Sentence* ret = getSentence(name);
+
+	if (ret != NULL) {
+		ret->content = strdup(content);
+	} else {
+		cout << "# Cannot find " << name << endl;
+	}
 
 	return ret;
 }
@@ -259,9 +301,9 @@ Sentence* appendSentence(char* name, char* content) {
 	Sentence* ret = getSentence(name);
 
 	if (ret != NULL) {
-	  if (ret->content == NULL){
+		if (ret->content == NULL) {
 			ret->content = strdup(content);
-		}else{
+		} else {
 			strcat(ret->content, content);
 		}
 	} else {
@@ -274,11 +316,31 @@ Sentence* appendSentence(char* name, char* content) {
 /*
  * Get the sentence by a given name, and reverse its content.
  */
-Sentence* reverseSentence(char* name) {
+Sentence* reverse(char* name) {
 	Sentence* ret = getSentence(name);
 
 	if (ret != NULL) {
-		reverse(ret->content);
+		char* cTemp = strdup(ret->content);
+
+		list<char*> wordList;
+		char* word = strtok(cTemp, SPLIT_WORDS);
+		while (word != NULL) {
+			wordList.push_front(word);
+			word = strtok(NULL, SPLIT_WORDS);
+		}
+
+		if (wordList.size() > 0) {
+			list<char*>::iterator it = wordList.begin();
+			char* firstWord = *it;
+			char* newContent = strdup(firstWord);
+			for (++it; it != wordList.end(); ++it) {
+				char* w = *it;
+				strcat(newContent, " ");
+				strcat(newContent, w);
+			}
+
+			ret->content = newContent;
+		}
 	} else {
 		cout << "# Cannot find " << name << endl;
 	}
@@ -287,13 +349,15 @@ Sentence* reverseSentence(char* name) {
 }
 
 /*
- * Reverse a str.
+ * Delete sentence by a given name.
  */
-void reverse(char* str){
-	char* strTemp = strdup(str);
+void deleteSentence(char* name) {
+	Sentence* s = getSentence(name);
 
-	for (strTemp = strchr(str, 0) - 1; str < strTemp; ++str, --strTemp){
-		std::swap(*str, *strTemp);
+	if (s != NULL) {
+		sList.remove(s);
+	} else {
+		cout << "# Cannot find " << name << endl;
 	}
 }
 
@@ -306,10 +370,9 @@ Sentence* getSentence(char* name) {
 	SentenceList::iterator it;
 	for (it = sList.begin(); it != sList.end(); ++it) {
 		Sentence* s = *it;
-
 		if (strcmp(s->name, name) == 0) {
-			// Same name
 			ret = s;
+			break;
 		}
 	}
 
@@ -325,16 +388,14 @@ char* getContent(char* name) {
 	SentenceList::iterator it;
 	for (it = sList.begin(); it != sList.end(); ++it) {
 		Sentence* s = *it;
-
 		if (strcmp(s->name, name) == 0) {
-			// Same name
 			ret = strdup(s->content);
+			break;
 		}
 	}
 
-	if (ret == NULL){
-		// Cannot file the sentence
-		cout << "Cannot find " << name << endl;
+	if (ret == NULL) {
+		cout << "# Cannot find " << name << endl;
 		ret = strdup("");
 	}
 
@@ -344,11 +405,11 @@ char* getContent(char* name) {
 /*
  * Print a sentence by a given name.
  */
-void println(char* name){
+void println(char* name) {
 	Sentence* s = getSentence(name);
-	if (s != NULL){
+	if (s != NULL) {
 		cout << s->name << ": " << "\"" << s->content << "\"" << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -356,26 +417,112 @@ void println(char* name){
 /*
  * Print the sentence.
  */
-void println(Sentence* s){
-	if (s != NULL){
+void println(Sentence* s) {
+	if (s != NULL) {
 		cout << s->name << ": " << "\"" << s->content << "\"" << endl;
-	}else{
+	} else {
 		cout << "# Cannot find it" << endl;
+	}
+}
+
+/*
+ * Print the sentence by a mid vagur name
+ */
+void printlnMidVague(char* name) {
+	int count = 0;
+	SentenceList::iterator it;
+	for (it = sList.begin(); it != sList.end(); ++it) {
+		Sentence* s = *it;
+
+		char* temp = strstr(s->name, name);
+		if (temp != NULL) {
+			count++;
+			println(s);
+		}
+	}
+
+	if (count == 0) {
+		cout << "# Cannot find *" << name << "*" << endl;
+	}
+}
+
+/*
+ * Print the sentence by a right vagur name
+ */
+void printlnRightVague(char* name) {
+	int count = 0;
+	SentenceList::iterator it;
+	for (it = sList.begin(); it != sList.end(); ++it) {
+		Sentence* s = *it;
+		char* temp = strstr(s->name, name);
+		if (temp != NULL) {
+			if (strlen(temp) == strlen(s->name)) {
+				count++;
+				println(s);
+			}
+		}
+	}
+
+	if (count == 0) {
+		cout << "# Cannot find " << name << "*" << endl;
+	}
+}
+
+/*
+ * Print the sentence by a left vagur name
+ */
+void printlnLeftVague(char* name) {
+	int count = 0;
+	SentenceList::iterator it;
+	for (it = sList.begin(); it != sList.end(); ++it) {
+		Sentence* s = *it;
+
+		char* temp = strstr(s->name, name);
+		if (temp != NULL) {
+			if (strlen(temp) == strlen(name)) {
+				println(s);
+			}
+		}
+	}
+
+	if (count == 0) {
+		cout << "# Cannot find *" << name << endl;
+	}
+}
+
+/*
+ * Search the sentence's content by a left vagur content
+ */
+void search(char* content) {
+	int count = 0;
+	SentenceList::iterator it;
+	for (it = sList.begin(); it != sList.end(); ++it) {
+		Sentence* s = *it;
+
+		char* temp = strstr(s->content, content);
+		if (temp != NULL) {
+			count++;
+			println(s);
+		}
+	}
+
+	if (count == 0) {
+		cout << "# Cannot find any with content \"" << content << "\"" << endl;
 	}
 }
 
 /*
  * Print a sentence's length by a given name.
  */
-void printlnLength(char* name){
+void printlnLength(char* name) {
 	Sentence* s = getSentence(name);
-	if (s != NULL){
+	if (s != NULL) {
 		int length = 0;
-		if (s->content != NULL){
+		if (s->content != NULL) {
 			length = strlen(s->content);
 		}
 		cout << "Length of " << s->name << " is: " << length << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -383,22 +530,18 @@ void printlnLength(char* name){
 /*
  * Print a sentence's word count by a given name.
  */
-void printlnWordCount(char* name){
+void printlnWordCount(char* name) {
 	Sentence* s = getSentence(name);
-
-	if (s != NULL){
+	if (s != NULL) {
 		char* cTemp = strdup(s->content);
-		// chars for splitting two word
-		char* split = strdup(" ,.:;?!");
-
 		int count = 0;
-		char* word = strtok(cTemp, split);
+		char* word = strtok(cTemp, SPLIT_WORDS);
 		while (word != NULL) {
-			word = strtok(NULL, split);
 			count++;
+			word = strtok(NULL, SPLIT_WORDS);
 		}
 		cout << "Wordcount of " << name << "is: " << count << endl;
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -406,21 +549,18 @@ void printlnWordCount(char* name){
 /*
  * Print a sentence's words by a given name.
  */
-void printlnWords(char* name){
-	Sentence* s = getSentence(name);
-
+void printlnWords(char* name) {
 	cout << "Words of " << name << " are: " << endl;
-	if (s != NULL){
+	Sentence* s = getSentence(name);
+	if (s != NULL) {
 		char* cTemp = strdup(s->content);
-		// chars for splitting two word
-		char* split = strdup(" ,.:;?!");
 
-		char* word = strtok(cTemp, split);
+		char* word = strtok(cTemp, SPLIT_WORDS);
 		while (word != NULL) {
 			cout << word << endl;
-			word = strtok(NULL, split);
+			word = strtok(NULL, SPLIT_WORDS);
 		}
-	}else{
+	} else {
 		cout << "# Cannot find " << name << endl;
 	}
 }
@@ -428,11 +568,10 @@ void printlnWords(char* name){
 /*
  * Print the sentence's container.
  */
-void listln(){
+void listln() {
 	int size = sList.size();
 	cout << "Identifier list (" << size << "):" << endl;
-
-	if (size > 0){
+	if (size > 0) {
 		SentenceList::iterator it;
 		for (it = sList.begin(); it != sList.end(); ++it) {
 			Sentence* s = *it;
@@ -448,17 +587,18 @@ void sentenceListRelease() {
 	SentenceList::iterator it = sList.begin();
 	for (it = sList.begin(); it != sList.end(); ++it) {
 		Sentence* s = *it;
-		delete (s);
-		s = NULL;
+		if (s != NULL) {
+			delete (s);
+			s = NULL;
+		}
 	}
-
 	sList.clear();
 }
 
 /*
  * Exit function.
  */
-void exit(){
+void exit() {
 	sentenceListRelease();
 	cout << "# Program exit" << endl;
 	exit(0);
